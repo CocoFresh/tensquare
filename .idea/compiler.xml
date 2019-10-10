@@ -12,6 +12,8 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="tensquare_base" target="1.8" />
+      <module name="tensquare_common" target="1.8" />
+      <module name="tensquare_parent" target="1.8" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
