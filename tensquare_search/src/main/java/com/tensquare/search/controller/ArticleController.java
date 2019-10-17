@@ -5,7 +5,6 @@ import com.tensquare.search.service.ArticleService;
 import entity.PageResult;
 import entity.Result;
 import entity.StatusCode;
-import org.hibernate.validator.constraints.pl.REGON;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
