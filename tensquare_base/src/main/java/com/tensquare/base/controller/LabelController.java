@@ -26,12 +26,12 @@ public class LabelController {
 
     @RequestMapping(method = RequestMethod.GET)
     public Result findAll() {
-        int i = 1 / 0;
         return new Result(true, StatusCode.OK, "查询成功", labelService.findAll());
     }
 
     @RequestMapping(value = "/{labelId}", method = RequestMethod.GET)
     public Result findById(@PathVariable("labelId") String labelId) {
+        System.out.println("No.1");
         return new Result(true, StatusCode.OK, "查询成功", labelService.findById(labelId));
     }
 

@@ -1,5 +1,6 @@
 package com.tensquare.user.controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +20,9 @@ import com.tensquare.user.service.UserService;
 import entity.PageResult;
 import entity.Result;
 import entity.StatusCode;
+import util.JwtUtil;
+
+import javax.jws.soap.SOAPBinding;
 
 /**
  * 控制器层
@@ -34,7 +38,34 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    RedisTemplate redisTemplate;
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @RequestMapping(value = "/incfans/{userid}/{x}", method = RequestMethod.POST)
+    public void incFanscount(@PathVariable String userid, @PathVariable int x) {
+        userService.incFanscount(userid, x);
+    }
+
+    @RequestMapping(value = "/incfollows/{userid}/{x}", method = RequestMethod.POST)
+    public void incFollowcount(@PathVariable String userid, @PathVariable int x) {
+        userService.incFollowcount(userid, x);
+    }
+
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    public Result login(@RequestBody User user) {
+        user = userService.login(user);
+        if (user == null) {
+            return new Result(false, StatusCode.LOGINERROR, "登录失败");
+        }
+        String token = jwtUtil.createJWT(user.getId(), user.getMobile(), "user");
+        Map<String, Object> map = new HashMap<>();
+        map.put("token", token);
+        map.put("role", "user");
+        return new Result(true, StatusCode.OK, "登录成功", map);
+
+    }
 
     /**
      * 发送短信验证码

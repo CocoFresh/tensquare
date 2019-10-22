@@ -30,10 +30,13 @@ public class SmsListener {
 
 
     @RabbitHandler()
-    public void sendSms(Map<String, String> map) throws ClientException {
+    public void sendSms(Map<String, String> map) {
         String mobile = map.get("mobile");
         String checkcode = map.get("checkcode");
-
-        smsUtil.sendSms(mobile, template_code, sign_name, " {\"number\":\"" + checkcode + "\"}");
+        try {
+            smsUtil.sendSms(mobile, template_code, sign_name, " {\"number\":\"" + checkcode + "\"}");
+        } catch (ClientException e) {
+            e.printStackTrace();
+        }
     }
 }

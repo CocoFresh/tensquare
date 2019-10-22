@@ -15,3 +15,11 @@ spring:
     host: 192.168.21.132
   rabbitmq:
     host: 192.168.21.132
+jwt:
+  config:
+    key: itcast
+    ttl: 864000000
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:6868/eureka

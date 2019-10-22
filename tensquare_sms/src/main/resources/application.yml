@@ -13,3 +13,7 @@ aliyun:
     accessKeySecret: 123123124
     template_code: 短信模板
     sign_name: 短信签名号
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:6868/eureka

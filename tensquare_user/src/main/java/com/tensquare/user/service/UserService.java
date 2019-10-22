@@ -9,7 +9,9 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
+import javax.servlet.http.HttpServletRequest;
 
+import io.jsonwebtoken.Claims;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +20,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
 import util.IdWorker;
 
 import com.tensquare.user.dao.UserDao;
 import com.tensquare.user.pojo.User;
+import util.JwtUtil;
 
 /**
  * 服务层
@@ -31,6 +36,7 @@ import com.tensquare.user.pojo.User;
  * @author Administrator
  */
 @Service
+@Transactional
 public class UserService {
 
     @Autowired
@@ -44,6 +50,15 @@ public class UserService {
 
     @Autowired
     RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    BCryptPasswordEncoder encoder;
+
+    @Autowired
+    private HttpServletRequest request;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     /**
      * 查询全部列表
@@ -98,6 +113,7 @@ public class UserService {
      */
     public void add(User user) {
         user.setId(idWorker.nextId() + "");
+        user.setPassword(encoder.encode(user.getPassword()));
         user.setFollowcount(0);//关注数
         user.setFanscount(0);//粉丝数
         user.setOnline(0L);//在线时长
@@ -122,6 +138,10 @@ public class UserService {
      * @param id
      */
     public void deleteById(String id) {
+        String token = (String) request.getAttribute("claims_admin");
+        if (token.isEmpty()) {
+            throw new RuntimeException("权限不足");
+        }
         userDao.deleteById(id);
     }
 
@@ -186,14 +206,30 @@ public class UserService {
         //生成六位随机数
         String checkcode = RandomStringUtils.randomNumeric(6);
         //存缓存
-        redisTemplate.opsForValue().set("checkcode_" + mobile, checkcode, 1, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set("checkcode_" + mobile, checkcode, 10, TimeUnit.MINUTES);
         //给用户发
-        Map<String, String> map = new HashMap<>();
-        map.put("mobile", mobile);
-        map.put("checkcode", checkcode);
-        rabbitTemplate.convertAndSend("sms", map);
+//        Map<String, String> map = new HashMap<>();
+//        map.put("mobile", mobile);
+//        map.put("checkcode", checkcode);
+//        rabbitTemplate.convertAndSend("sms", map);
 
-        System.out.println("验证码为：" + mobile);
+        System.out.println("验证码为：" + checkcode);
 
+    }
+
+    public User login(User user) {
+        User user1 = userDao.findByMobile(user.getMobile());
+        if (user1 != null && encoder.matches(user.getPassword(), user1.getPassword())) {
+            return user1;
+        }
+        return null;
+    }
+
+    public void incFanscount(String userid, int x) {
+        userDao.incFanscount(x, userid);
+    }
+
+    public void incFollowcount(String userid, int x) {
+        userDao.incFollowcount(x, userid);
     }
 }
